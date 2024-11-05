@@ -525,7 +525,7 @@ function IframeIfReady( props, ref ) {
 	// the initial iframe HTML, which is required to avoid a flash of unstyled
 	// content.
 	if ( ! isInitialised ) {
-		return null;
+		//return null;
 	}
 
 	return <Iframe { ...props } forwardedRef={ ref } />;

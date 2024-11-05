@@ -1,0 +1,42 @@
+.style-editor-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    height: 100vh;
+}
+.style-editor-layout__content {
+    display: flex;
+    height: calc(100vh - 30px);
+    background-color: white;
+}
+.style-editor-layout__sidebar {
+    border-right: 1px solid #e5e5e5;
+    width: 300px;
+    overflow-y: auto;
+}
+.style-editor-layout__sidebar-header {
+    padding: 14px;
+    border-bottom: 1px solid #e5e5e5;
+    h2 {
+        margin: 0;
+        padding: 0;
+    }
+}
+.style-editor-layout__canvas-container {
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    flex: 1 0 auto;
+}
+.style-editor-layout__canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+.style-editor-layout__iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}

@@ -1,9 +1,10 @@
 /**
  * Internal dependencies
  */
-import Editor from '../editor';
+// import Editor from '../editor';
 import SidebarNavigationScreenGlobalStyles from '../sidebar-navigation-screen-global-styles';
-import GlobalStylesUIWrapper from '../sidebar-global-styles-wrapper';
+//import GlobalStylesUIWrapper from '../sidebar-global-styles-wrapper';
+import StylesEditor from '../styles-editor';
 
 export const stylesViewRoute = {
 	name: 'styles-view',
@@ -15,10 +16,10 @@ export const stylesViewRoute = {
 		);
 	},
 	areas: {
-		content: <GlobalStylesUIWrapper />,
+		// content: <GlobalStylesUIWrapper />,
 		sidebar: <SidebarNavigationScreenGlobalStyles backPath={ {} } />,
-		preview: <Editor />,
-		mobile: <GlobalStylesUIWrapper />,
+		preview: <StylesEditor />,
+		// mobile: <GlobalStylesUIWrapper />,
 	},
 	widths: {
 		content: 380,
