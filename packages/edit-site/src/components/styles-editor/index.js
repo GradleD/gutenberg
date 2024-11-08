@@ -5,120 +5,71 @@
 /**
  * WordPress dependencies
  */
-import { privateApis as routerPrivateApis } from '@wordpress/router';
-import {
-	parse,
-	createBlock,
-	__unstableSerializeAndClean,
-} from '@wordpress/blocks';
-import { useDispatch, useSelect } from '@wordpress/data';
+import { useSelect } from '@wordpress/data';
 import {
 	BlockList,
 	privateApis as blockEditorPrivateApis,
-	store as blockEditorStore,
 	__unstableEditorStyles as EditorStyles,
 	__unstableIframe as Iframe,
-	BlockPreview,
-	BlockContextProvider,
 } from '@wordpress/block-editor';
-import { Disabled } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { useCallback, useMemo, memo, useContext } from '@wordpress/element';
-import { useInstanceId, useReducedMotion } from '@wordpress/compose';
-
-import {
-	privateApis as editorPrivateApis,
-	EditorProvider,
-} from '@wordpress/editor';
-import {
-	EntityProvider,
-	useEntityBlockEditor,
-	store as coreDataStore,
-} from '@wordpress/core-data';
+import { memo, useState } from '@wordpress/element';
+import { useEntityBlockEditor } from '@wordpress/core-data';
 
 /**
  * Internal dependencies
  */
 import { unlock } from '../../lock-unlock';
 import { store as editSiteStore } from '../../store';
-import { GlobalStylesRenderer } from '../global-styles-renderer';
 import GlobalStylesUI from '../global-styles/ui';
-import CanvasLoader from '../canvas-loader';
-import { Async } from '../async';
-import usePatternSettings from '../page-patterns/use-pattern-settings';
 import { useSpecificEditorSettings } from '../block-editor/use-site-editor-settings';
+import StyleBook from '../style-book';
 
-function isObjectEmpty( object ) {
-	return ! object || Object.keys( object ).length === 0;
-}
-
-function useBlockEditorProps( post, template, mode ) {
-	const [ templateBlocks ] = useEntityBlockEditor(
-		'postType',
-		template?.type,
-		{
-			id: template?.id,
-		}
-	);
-
-	return templateBlocks;
-}
-
-const { mergeBaseAndUserConfigs } = unlock( editorPrivateApis );
-const { useHistory, useLocation } = unlock( routerPrivateApis );
-const {
-	ExperimentalBlockEditorProvider,
-	GlobalStylesContext,
-	useGlobalStylesOutputWithConfig,
-	useGlobalStylesOutput,
-	__unstableBlockStyleVariationOverridesWithConfig,
-} = unlock( blockEditorPrivateApis );
-const EMPTY_ARRAY = [];
+const { ExperimentalBlockEditorProvider, useGlobalStylesOutput } = unlock(
+	blockEditorPrivateApis
+);
 // This is used to avoid rendering the block list if the sizes change.
 const MemoizedBlockList = memo( BlockList );
 
+/*
+  Rough requirements:
+    - The component can be standalone or part of a larger editor. Need to work out block contexts etc.
+    - The component should be able to load a global styles entity and a "post" entity, where
+      a post is the contents of a template, template part, pattern, page, post or custom post type.
+    - The component should accept a postType and postId prop to load a specific post.
+    - The component should accept a globalStylesId prop to load a specific global styles entity,
+      alternatively a full userConfig object to merge with base config.
+    - The component should accept a children prop to extend or override the rendered post or global styles UI.
+    - The canvas should be configurable to show anything. Initially it could just load the style book, and the home page template for block themes.
+      Thinking of classic themes, how to overload with classic theme CSS? Here's where a custom PHP page could be useful (and faster)
+
+
+
+  Future props:
+  - globalStylesId to load a global styles record, alternatively a full userConfig object to merge with base config.
+  - postType to load a specific post type, this could from a parent component or a URL parameter
+  - postId to load a specific post, this could from a parent component or a URL parameter
+  - children to extend or override the rendered post or global styles UI (?)
+
+  Notes:
+    - How will, if ever, classic themes be supported? Would it be a link to `site-editor.php`
+      or should there be a custom page, e.g., `styles-editor.php`? I'm not sure the former
+      is possible anyway as there are guards against classic themes accessing.
+      The latter would allow for more flexibility and separations of concerns in the future.
+  -
+
+ */
 export default function StylesEditor() {
-	/*
-
-		A component that renders Global styles controls UI and an editor canvas with the current global styles applied.
-
-		The editor canvas is a rendered block list with the global styles applied.
-
-		The editor "canvas" can also render the style book.
-
-		If there's a global styles post id passed to this component, we should fetch it,
-		so we can build the styles. The globalStylesId is the initial global styles record to render.
-
-		Internally, it can use other global style objects.
-
-		FUTURE: Ideally, the component should handle any merged style object passed to it via props.
-
-		This component also needs to render current user global styles record, to support styles editing.
-
-		If there's a post/template id, we should fetch it so we can render it in the editor.
-
-		FUTURE: If there are children, we assume they override the rendered post/template.
-
-		Or everything is internal: we swap the canvas in and out of the style book internally for now.
-
-		Similarly, revisions can be toggled on, replacing the global styles controls UI.
-
-		<StylesEditor globalStylesId={ 1 }>
-			FUTURE: <StyleBook />
-		</StylesEditor>
-
-	 */
-
 	const { editedPostType, editedPostId } = useSelect( ( select ) => {
 		const { getEditedPostType, getEditedPostId } = unlock(
 			select( editSiteStore )
 		);
-
 		return {
 			editedPostType: getEditedPostType(),
 			editedPostId: getEditedPostId(),
 		};
 	}, [] );
+	const [ isStyleBookOpen, setIsStyleBookOpen ] = useState( true );
 	const _siteSettings = useSpecificEditorSettings();
 	const [ blocks ] = useEntityBlockEditor( 'postType', editedPostType, {
 		id: editedPostId,
@@ -127,35 +78,40 @@ export default function StylesEditor() {
 	const isLoaded =
 		blocks && blocks.length > 0 && !! _siteSettings && !! editorStyles;
 
-	/*
-	- Need NavigableRegion to be able to navigate the editor canvas.
-	- Setting ExperimentalBlockEditorProvider useSubRegistry to true breaks the blockWithoutAttributes test in blocklist
-	  But without it the navigation and other template parts are not styled in the editor canvas.
-
-	*/
+	if ( ! isLoaded ) {
+		return;
+	}
 
 	return (
-		<>
-			<GlobalStylesRenderer />
-			{ isLoaded && (
-				<div className="style-editor-layout">
-					<div className="style-editor-layout__content">
-						<div className="style-editor-layout__sidebar">
-							<div className="style-editor-layout__sidebar-header">
-								<h2>{ __( 'Styles' ) }</h2>
-							</div>
-							<GlobalStylesUI
-								path="/"
-								onPathChange={ () => {} }
-							/>
-						</div>
-						<div className="style-editor-layout__canvas-container">
-							<div className="style-editor-layout__canvas">
-								<Iframe
-									className="style-editor-layout__iframe"
-									name="styles-editor"
-									tabIndex={ 0 }
-								>
+		<div className="style-editor-layout">
+			<div className="style-editor-layout__content">
+				<div className="style-editor-layout__sidebar">
+					<div className="style-editor-layout__sidebar-header">
+						<h2>{ __( 'Styles' ) }</h2>
+						<button
+							onClick={ () =>
+								setIsStyleBookOpen( ! isStyleBookOpen )
+							}
+						>
+							Toggle
+						</button>
+					</div>
+					<GlobalStylesUI path="/" onPathChange={ () => {} } />
+				</div>
+				<div className="style-editor-layout__canvas-container">
+					<div className="style-editor-layout__canvas">
+						<Iframe
+							className="style-editor-layout__iframe"
+							name="styles-editor"
+							tabIndex={ 0 }
+						>
+							{ isStyleBookOpen ? (
+								<>
+									<EditorStyles styles={ editorStyles } />
+									<StyleBook />
+								</>
+							) : (
+								<>
 									<style>
 										{
 											// Forming a "block formatting context" to prevent margin collapsing.
@@ -167,6 +123,12 @@ export default function StylesEditor() {
 									<ExperimentalBlockEditorProvider
 										value={ blocks }
 										settings={ _siteSettings }
+										/*
+										@TODO For some reason, some blocks like navigation
+										are not added to the block editor registry
+										and won't be styled correctly. See the `if ( ! blockWithoutAttributes ) {`
+										test in  packages/block-editor/src/components/block-list/block.js
+										*/
 										useSubRegistry={ false }
 									>
 										<MemoizedBlockList
@@ -178,12 +140,12 @@ export default function StylesEditor() {
 										 */ }
 										<EditorStyles styles={ editorStyles } />
 									</ExperimentalBlockEditorProvider>
-								</Iframe>
-							</div>
-						</div>
+								</>
+							) }
+						</Iframe>
 					</div>
 				</div>
-			) }
-		</>
+			</div>
+		</div>
 	);
 }

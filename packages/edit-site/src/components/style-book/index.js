@@ -233,6 +233,19 @@ function StyleBook( {
 		[ globalStyles, originalSettings, userConfig ]
 	);
 
+	// @TODO temporary hack for this branch.
+	return (
+		<StyleBookBody
+			examples={ examples }
+			isSelected={ isSelected }
+			onClick={ onClick }
+			onSelect={ onSelect }
+			settings={ settings }
+			sizes={ sizes }
+			goTo={ goTo }
+		/>
+	);
+
 	return (
 		<EditorCanvasContainer
 			onClose={ onClose }
@@ -348,6 +361,36 @@ const StyleBookBody = ( {
 			scrollToSection( `example-${ goTo?.block }`, iframeRef?.current );
 		}
 	}, [ iframeRef?.current, goTo?.block, scrollToSection, hasIframeLoaded ] );
+
+	// @TODO temporary hack for this branch, to have a single iframe for styles.
+	return (
+		<>
+			<style>
+				{ STYLE_BOOK_IFRAME_STYLES }
+				{ !! onClick &&
+					'body { cursor: pointer; } body * { pointer-events: none; }' }
+			</style>
+			<Examples
+				className={ clsx( 'edit-site-style-book__examples', {
+					'is-wide': sizes.width > 600,
+				} ) }
+				examples={ examples }
+				category={ category }
+				label={
+					title
+						? sprintf(
+								// translators: %s: Category of blocks, e.g. Text.
+								__( 'Examples of blocks in the %s category' ),
+								title
+						  )
+						: __( 'Examples of blocks' )
+				}
+				isSelected={ isSelected }
+				onSelect={ onSelect }
+				key={ category }
+			/>
+		</>
+	);
 
 	return (
 		<Iframe

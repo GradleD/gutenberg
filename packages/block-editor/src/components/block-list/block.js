@@ -618,8 +618,7 @@ function BlockListBlockProvider( props ) {
 			// This function should never be called when a block is not
 			// present in the state. It happens now because the order in
 			// withSelect rendering is not correct.
-
-			// @TODO check why this fails without subregistry
+			// @TODO this is a hack only for this branch.
 /*			if ( ! blockWithoutAttributes ) {
 				return;
 			}*/
