@@ -298,11 +298,14 @@ export const __EXPERIMENTAL_PATHS_WITH_OVERRIDE = {
 	'spacing.spacingSizes': true,
 };
 
-export const TYPOGRAPHY_SUPPORTS_EXPERIMENTAL_TO_STABLE = {
-	__experimentalFontFamily: 'fontFamily',
-	__experimentalFontStyle: 'fontStyle',
-	__experimentalFontWeight: 'fontWeight',
-	__experimentalLetterSpacing: 'letterSpacing',
-	__experimentalTextDecoration: 'textDecoration',
-	__experimentalTextTransform: 'textTransform',
+export const EXPERIMENTAL_TO_STABLE_KEYS = {
+	typography: {
+		__experimentalFontFamily: 'fontFamily',
+		__experimentalFontStyle: 'fontStyle',
+		__experimentalFontWeight: 'fontWeight',
+		__experimentalLetterSpacing: 'letterSpacing',
+		__experimentalTextDecoration: 'textDecoration',
+		__experimentalTextTransform: 'textTransform',
+	},
+	__experimentalBorder: 'border',
 };

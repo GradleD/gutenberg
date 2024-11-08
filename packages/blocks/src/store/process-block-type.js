@@ -18,7 +18,7 @@ import { isValidIcon, normalizeIconObject, omit } from '../api/utils';
 import {
 	BLOCK_ICON_DEFAULT,
 	DEPRECATED_ENTRY_KEYS,
-	TYPOGRAPHY_SUPPORTS_EXPERIMENTAL_TO_STABLE,
+	EXPERIMENTAL_TO_STABLE_KEYS,
 } from '../api/constants';
 
 /** @typedef {import('../api/registration').WPBlockType} WPBlockType */
@@ -75,24 +75,62 @@ function stabilizeSupports( rawSupports ) {
 	// custom block plugins that rely on immutable supports are not affected.
 	// See: https://github.com/WordPress/gutenberg/pull/66849#issuecomment-2463614281
 	const newSupports = {};
-	for ( const [ key, value ] of Object.entries( rawSupports ) ) {
-		if (
-			key === 'typography' &&
-			typeof value === 'object' &&
-			value !== null
-		) {
-			newSupports.typography = Object.fromEntries(
-				Object.entries( value ).map(
-					( [ typographyKey, typographyValue ] ) => [
-						TYPOGRAPHY_SUPPORTS_EXPERIMENTAL_TO_STABLE[
-							typographyKey
-						] || typographyKey,
-						typographyValue,
-					]
-				)
+
+	for ( const [ support, config ] of Object.entries( rawSupports ) ) {
+		// Add the current support's config as is if it does not need stabilization.
+		if ( ! EXPERIMENTAL_TO_STABLE_KEYS[ support ] ) {
+			newSupports[ support ] = config;
+			continue;
+		}
+
+		// Stabilize the support's key if needed e.g. __experimentalBorder => border.
+		if ( typeof EXPERIMENTAL_TO_STABLE_KEYS[ support ] === 'string' ) {
+			const stabilizedKey = EXPERIMENTAL_TO_STABLE_KEYS[ support ];
+
+			// If there's no stabilized key present, just use the config as is.
+			if ( ! Object.hasOwn( rawSupports, stabilizedKey ) ) {
+				newSupports[ stabilizedKey ] = config;
+				continue;
+			}
+
+			// Determine the insertion order for both key.
+			const entries = Object.entries( rawSupports );
+			const experimentalIndex = entries.findIndex(
+				( [ key ] ) => key === support
 			);
-		} else {
-			newSupports[ key ] = value;
+			const stabilizedIndex = entries.findIndex(
+				( [ key ] ) => key === stabilizedKey
+			);
+
+			if ( typeof config === 'object' && config !== null ) {
+				newSupports[ stabilizedKey ] =
+					experimentalIndex < stabilizedIndex
+						? { ...config, ...rawSupports[ stabilizedKey ] }
+						: { ...rawSupports[ stabilizedKey ], ...config };
+			} else {
+				newSupports[ stabilizedKey ] =
+					experimentalIndex < stabilizedIndex
+						? rawSupports[ stabilizedKey ]
+						: config;
+			}
+			continue;
+		}
+
+		// Stabilize individual support feature keys
+		// e.g. __experimentalFontFamily => fontFamily.
+		const featureStabilizationRequired =
+			typeof EXPERIMENTAL_TO_STABLE_KEYS[ support ] === 'object' &&
+			EXPERIMENTAL_TO_STABLE_KEYS[ support ] !== null;
+		const hasConfig = typeof config === 'object' && config !== null;
+
+		if ( featureStabilizationRequired && hasConfig ) {
+			const stableConfig = {};
+			for ( const [ key, value ] of Object.entries( config ) ) {
+				const stableKey =
+					EXPERIMENTAL_TO_STABLE_KEYS[ support ][ key ] || key;
+				stableConfig[ stableKey ] = value;
+			}
+			newSupports[ support ] = stableConfig;
 		}
 	}
 
