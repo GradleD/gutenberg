@@ -390,6 +390,7 @@ const withDerivedBlockEditingMode = ( reducer ) => ( state, action ) => {
 			break;
 		}
 		case 'SET_EDITOR_MODE':
+		case 'RESET_ZOOM_LEVEL':
 		case 'SET_ZOOM_LEVEL': {
 			if ( isZoomedOut || isNavMode ) {
 				// When there are sections, the majority of blocks are disabled,
