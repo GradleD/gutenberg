@@ -23,6 +23,14 @@ interface Links {
 	[ key: string ]: { href: string }[] | undefined;
 }
 
+interface Author {
+	name: string;
+}
+
+interface Embedded {
+	author?: Author[];
+}
+
 export interface BasePost extends CommonPost {
 	comment_status?: 'open' | 'closed';
 	excerpt?: string | { raw: string; rendered: string };
@@ -39,6 +47,8 @@ export interface BasePost extends CommonPost {
 	permalink_template?: string;
 	date?: string;
 	modified?: string;
+	author?: number;
+	_embedded?: Embedded;
 }
 
 export interface Template extends CommonPost {
