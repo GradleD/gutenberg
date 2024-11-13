@@ -5927,7 +5927,7 @@ class WP_Theme_JSON_Gutenberg_Test extends WP_UnitTestCase {
 						),
 					),
 					'core/group'  => array(
-						'elements'   => array(
+						'elements' => array(
 							'link' => array(
 								'color' => array(
 									'background' => 'blue',
@@ -6013,7 +6013,7 @@ class WP_Theme_JSON_Gutenberg_Test extends WP_UnitTestCase {
 
 		$expected = array(
 			array(
-				'path' => array( 'styles', 'blocks', 'core/button' ),
+				'path'       => array( 'styles', 'blocks', 'core/button' ),
 				'variations' => array(
 					array(
 						'path' => array( 'styles', 'blocks', 'core/button', 'variations', 'cheese' ),
@@ -6021,7 +6021,7 @@ class WP_Theme_JSON_Gutenberg_Test extends WP_UnitTestCase {
 				),
 			),
 			array(
-				'path' => array( 'styles', 'blocks', 'core/group' ),
+				'path'       => array( 'styles', 'blocks', 'core/group' ),
 				'variations' => array(
 					array(
 						'path' => array( 'styles', 'blocks', 'core/group', 'variations', 'apricot' ),
