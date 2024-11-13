@@ -5927,7 +5927,7 @@ class WP_Theme_JSON_Gutenberg_Test extends WP_UnitTestCase {
 						),
 					),
 					'core/group'  => array(
-						'elements' => array(
+						'elements'   => array(
 							'link' => array(
 								'color' => array(
 									'background' => 'blue',
@@ -5950,6 +5950,83 @@ class WP_Theme_JSON_Gutenberg_Test extends WP_UnitTestCase {
 			),
 			array(
 				'path' => array( 'styles', 'blocks', 'core/group', 'elements', 'link' ),
+			),
+		);
+
+		$this->assertEquals( $expected, $block_nodes );
+	}
+
+	/**
+	 * This test covers `get_block_nodes` with the `$include_node_paths_only`
+	 * and `include_block_style_variations` options.
+	 */
+	public function test_return_block_node_paths_with_variations() {
+		$theme_json = new ReflectionClass( 'WP_Theme_JSON_Gutenberg' );
+
+		$func = $theme_json->getMethod( 'get_block_nodes' );
+		$func->setAccessible( true );
+
+		$theme_json = array(
+			'version' => WP_Theme_JSON_Gutenberg::LATEST_SCHEMA,
+			'styles'  => array(
+				'typography' => array(
+					'fontSize' => '16px',
+				),
+				'blocks'     => array(
+					'core/button' => array(
+						'color'      => array(
+							'background' => 'red',
+						),
+						'variations' => array(
+							'cheese' => array(
+								'color' => array(
+									'background' => 'cheese',
+								),
+							),
+						),
+					),
+					'core/group'  => array(
+						'color'      => array(
+							'background' => 'blue',
+						),
+						'variations' => array(
+							'apricot' => array(
+								'color' => array(
+									'background' => 'apricot',
+								),
+							),
+						),
+					),
+				),
+			),
+		);
+
+		$block_nodes = $func->invoke(
+			null,
+			$theme_json,
+			array(),
+			array(
+				'include_node_paths_only'        => true,
+				'include_block_style_variations' => true,
+			)
+		);
+
+		$expected = array(
+			array(
+				'path' => array( 'styles', 'blocks', 'core/button' ),
+				'variations' => array(
+					array(
+						'path' => array( 'styles', 'blocks', 'core/button', 'variations', 'cheese' ),
+					),
+				),
+			),
+			array(
+				'path' => array( 'styles', 'blocks', 'core/group' ),
+				'variations' => array(
+					array(
+						'path' => array( 'styles', 'blocks', 'core/group', 'variations', 'apricot' ),
+					),
+				),
 			),
 		);
 
