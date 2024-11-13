@@ -2751,7 +2751,7 @@ class WP_Theme_JSON_Gutenberg {
 			if ( $include_node_paths_only ) {
 				$variation_paths = array();
 				if ( $include_variations && isset( $node['variations'] ) ) {
-					foreach ( $node['variations'] as $variation => $node ) {
+					foreach ( $node['variations'] as $variation => $variation_node ) {
 						$variation_paths[] = array(
 							'path' => array( 'styles', 'blocks', $name, 'variations', $variation ),
 						);
